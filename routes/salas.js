@@ -23,11 +23,11 @@ const upload = multer({ storage });
 router.post('', upload.single('file'), async (req, res, next) => {
     try {
         const file = req.file;
-        const Nombre = req.body.nombre;
+        const nombre = req.body.nombre;
 
         const sala = {
             id: null,
-            Nombre: Nombre,
+            Nombre: nombre,
             Foto: file ? file.path : "salas/default.png",
         };
 
@@ -44,26 +44,56 @@ router.post('', upload.single('file'), async (req, res, next) => {
 });
 
 //obtener todas las salas
-router.get('', (req, res) =>{
-    con.query('SELECT * FROM salas', (error, rows, fields)=>{
-        if(!error){
+router.get('', (req, res) => {
+    con.query('SELECT * FROM salas', (error, rows, fields) => {
+        if (!error) {
             res.json(rows);
         } else {
             console.log('Error al obtener los datos' + error);
         }
     })
-})
+});
 
 //obtener sólo una sala
-router.get('/:id', (req, res)=>{
+router.get('/:id', (req, res) => {
     const id = req.params.id;
-    con.query('SELECT * FROM salas WHERE id = ?', id, (error, rows, fields)=>{
-        if(!error){
+    con.query('SELECT * FROM salas WHERE id = ?', id, (error, rows, fields) => {
+        if (!error) {
             res.json(rows);
         } else {
             console.log('Error al obtener los datos' + error);
         }
     })
-})
+});
+
+//actualizar datos de una sala
+
+//actualizar datos de una sala
+router.put('/:id', upload.single('file'), (req, res) => {
+    const id = req.params.id;
+    const nombre = req.body.nombre;
+    const file = req.file;
+
+    const salaAct = {
+        Nombre: nombre,
+        Foto: file ? file.path : "salas/default.png",
+    };
+    //verificar si existe la sala
+    con.query('SELECT * FROM salas WHERE id = ?', id, (error, rows, fields) => {
+        if (!error && rows.length > 0) {
+            con.query('UPDATE salas SET ? WHERE id = ?', [salaAct, id], (error, results) => {
+                if (!error) {
+                    res.send({ success: true, message: 'Sala actualizada exitosamente.' });
+                } else {
+                    console.log('Error al actualizar.');
+                }
+            });
+        } else {
+            console.log('Error al actualizar, sala no existe.');
+            res.send({ success: false, message: 'Error al actualizar, sala no existe.' })
+        }
+    });
+
+});
 
 module.exports = router;
