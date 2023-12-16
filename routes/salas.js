@@ -43,4 +43,27 @@ router.post('', upload.single('file'), async (req, res, next) => {
     }
 });
 
+//obtener todas las salas
+router.get('', (req, res) =>{
+    con.query('SELECT * FROM salas', (error, rows, fields)=>{
+        if(!error){
+            res.json(rows);
+        } else {
+            console.log('Error al obtener los datos' + error);
+        }
+    })
+})
+
+//obtener sólo una sala
+router.get('/:id', (req, res)=>{
+    const id = req.params.id;
+    con.query('SELECT * FROM salas WHERE id = ?', id, (error, rows, fields)=>{
+        if(!error){
+            res.json(rows);
+        } else {
+            console.log('Error al obtener los datos' + error);
+        }
+    })
+})
+
 module.exports = router;
