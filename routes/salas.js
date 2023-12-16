@@ -93,7 +93,27 @@ router.put('/:id', upload.single('file'), (req, res) => {
             res.send({ success: false, message: 'Error al actualizar, sala no existe.' })
         }
     });
+});
 
+//eliminar una sala
+router.delete('/:id', (req, res) => {
+    const id = req.params.id;
+
+    //verificar si existe la sala
+    con.query('SELECT * FROM salas WHERE id = ?', id, (error, rows, fields) => {
+        if (!error && rows.length > 0) {
+            con.query('DELETE FROM salas WHERE id = ?', id, (error, results) => {
+                if (!error) {
+                    res.send({ success: true, message: 'Sala eliminada exitosamente.' });
+                } else {
+                    console.log('Error al eliminar');
+                }
+            });
+        } else {
+            console.log('Error al eliminar, sala no existe.');
+            res.send({ success: false, message: 'Error al eliminar, sala no existe.' })
+        }
+    });
 });
 
 module.exports = router;
