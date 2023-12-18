@@ -19,11 +19,11 @@ CREATE TABLE IF NOT EXISTS salas (
 );
 
 -- Tabla de préstamo de salas
-CREATE TABLE IF NOT EXISTS sala_usuario (
+CREATE TABLE IF NOT EXISTS reservacion (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT,
     id_sala INT,
-    Estado ENUM('Apartada','En uso','Completado') NOT NULL,
+    Estado ENUM('Cancelado','Pendiente','Completado') NOT NULL,
     Fecha DATE NOT NULL,
     HoraInicio TIME NOT NULL,
     HoraFinal TIME NOT NULL,

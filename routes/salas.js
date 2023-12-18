@@ -67,21 +67,19 @@ router.get('/:id', (req, res) => {
 });
 
 //actualizar datos de una sala
-
-//actualizar datos de una sala
 router.put('/:id', upload.single('file'), (req, res) => {
     const id = req.params.id;
     const nombre = req.body.nombre;
     const file = req.file;
 
-    const salaAct = {
+    const sala = {
         Nombre: nombre,
         Foto: file ? file.path : "salas/default.png",
     };
     //verificar si existe la sala
     con.query('SELECT * FROM salas WHERE id = ?', id, (error, rows, fields) => {
         if (!error && rows.length > 0) {
-            con.query('UPDATE salas SET ? WHERE id = ?', [salaAct, id], (error, results) => {
+            con.query('UPDATE salas SET ? WHERE id = ?', [sala, id], (error, results) => {
                 if (!error) {
                     res.send({ success: true, message: 'Sala actualizada exitosamente.' });
                 } else {
@@ -98,7 +96,6 @@ router.put('/:id', upload.single('file'), (req, res) => {
 //eliminar una sala
 router.delete('/:id', (req, res) => {
     const id = req.params.id;
-
     //verificar si existe la sala
     con.query('SELECT * FROM salas WHERE id = ?', id, (error, rows, fields) => {
         if (!error && rows.length > 0) {
