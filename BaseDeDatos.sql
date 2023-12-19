@@ -30,3 +30,21 @@ CREATE TABLE IF NOT EXISTS reservacion (
     FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
     FOREIGN KEY (id_sala) REFERENCES salas(id)
 );
+
+INSERT INTO usuarios (Nombre, ApellidoP, ApellidoM, Puesto, Foto) VALUES 
+('Juan', 'González', 'López', 'Jefe','iusuarios/face1.png'),
+('María', 'Rodríguez', 'Martínez', 'Supervisor','iusuarios/face2.png'),
+('Pedro', 'Sánchez', 'Gómez', 'Empleado','iusuarios/face3.png'),
+('Laura', 'Pérez', 'García', 'Jefe','iusuarios/default.png');
+
+INSERT INTO salas (Nombre, Foto) VALUES 
+('Sala A','isalas/boardroom1.png'),
+('Sala B','isalas/boardroom2.png'),
+('Sala C','isalas/boardroom3.png'),
+('Sala D','isalas/boardroom4.png');
+
+INSERT INTO reservacion (id_usuario, id_sala, Estado, Fecha, HoraInicio, HoraFinal) VALUES 
+(1, 1, 'Pendiente', '2023-12-19', '09:00:00', '11:00:00'),
+(2, 2, 'Pendiente', '2023-12-19', '10:00:00', '12:00:00'),
+(3, 3, 'Pendiente', '2023-12-19', '11:00:00', '13:00:00'),
+(4, 4, 'Pendiente', '2023-12-19', '14:00:00', '16:00:00');

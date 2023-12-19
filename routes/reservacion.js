@@ -3,13 +3,16 @@ const path = require('path');
 const fs = require('fs').promises;
 const con = require('../database');
 
+const moment = require('moment-timezone');
+moment.tz.setDefault('America/Mexico_City');
+
 const router = express.Router();
 
 //crear reservación
 router.post('', (req, res, next) => {
     const usuario = req.body.usuario;
     const sala = req.body.sala;
-    const Estado = req.body.Estado;;
+    const Estado = req.body.Estado;
     const Fecha = req.body.Fecha;
     const HoraInicio = req.body.HoraInicio;
     const HoraFinal = req.body.HoraFinal;
@@ -127,6 +130,58 @@ router.put('/:id', (req, res) => {
     });
 });
 
+//cancelar reservacion
+router.put('/cancel/:id', (req, res) => {
+    const id = req.params.id;
+
+    // Verificar si existe la reservación
+    con.query('SELECT * FROM reservacion WHERE id = ?', id, (error, rows, fields) => {
+        if (!error && rows.length > 0) {
+            const cancel = {
+                Estado: 'Cancelado',
+            };
+
+            con.query('UPDATE reservacion SET ? WHERE id = ?', [cancel, id], (error, results) => {
+                if (!error) {
+                    res.send({ success: true, message: 'Reservación cancelada.' });
+                } else {
+                    console.log('Error al cancelar.');
+                    res.send("Error al cancelar.");
+                }
+            });
+        } else {
+            console.log('Error al cancelar, la reservación no existe.');
+            res.send({ success: false, message: 'Error al cancelar, la reservación no existe.' });
+        }
+    });
+});
+
+//completar reservacion
+router.put('/complete/:id', (req, res) => {
+    const id = req.params.id;
+
+    // Verificar si existe la reservación
+    con.query('SELECT * FROM reservacion WHERE id = ?', id, (error, rows, fields) => {
+        if (!error && rows.length > 0) {
+            const cancel = {
+                Estado: 'Completado',
+            };
+
+            con.query('UPDATE reservacion SET ? WHERE id = ?', [cancel, id], (error, results) => {
+                if (!error) {
+                    res.send({ success: true, message: 'Reservación completada.' });
+                } else {
+                    console.log('Error al completar.');
+                    res.send("Error al completar.");
+                }
+            });
+        } else {
+            console.log('Error al completar, la reservación no existe.');
+            res.send({ success: false, message: 'Error al completar, la reservación no existe.' });
+        }
+    });
+});
+
 //eliminar una reservación
 router.delete('/:id', (req, res) => {
     const id = req.params.id;
@@ -150,8 +205,9 @@ router.delete('/:id', (req, res) => {
 
 //cambiar reservaciones de pendiente a completado en función de horafinal
 const completarReserv = () => {
-    const now = new Date();
-    con.query('UPDATE reservacion SET estado = "Completado" WHERE estado = "Pendiente" AND HoraFinal <= ?', [now], (error, results) => {
+    const now = moment();
+    console.log(now.format('YYYY-MM-DD HH:mm:ss'));
+    con.query('UPDATE reservacion SET estado = "Completado" WHERE estado = "Pendiente" AND CONCAT(Fecha, " ", HoraFinal) <= ?', [now.format('YYYY-MM-DD HH:mm:ss')], (error, results) => {
         if (!error) {
             //console.log('Cambio a completado');
         } else {

@@ -7,10 +7,10 @@ const con = require('../database');
 const router = express.Router();
 
 //guardar las imágenes con multer
-router.use('/salas', express.static(path.join(__dirname, 'salas')));
+router.use('/isalas', express.static(path.join(__dirname, 'isalas')));
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'salas');
+        cb(null, 'isalas');
     },
     filename: (req, file, cb) => {
         cb(null, file.originalname);
@@ -28,7 +28,7 @@ router.post('', upload.single('file'), async (req, res, next) => {
         const sala = {
             id: null,
             Nombre: nombre,
-            Foto: file ? file.path : "salas/default.png",
+            Foto: file ? file.path : "isalas/default.png",
         };
 
         con.query('INSERT INTO salas SET ?', [sala], (error, results) => {
@@ -74,7 +74,7 @@ router.put('/:id', upload.single('file'), (req, res) => {
 
     const sala = {
         Nombre: nombre,
-        Foto: file ? file.path : "salas/default.png",
+        Foto: file ? file.path : "isalas/default.png",
     };
     //verificar si existe la sala
     con.query('SELECT * FROM salas WHERE id = ?', id, (error, rows, fields) => {
@@ -95,22 +95,47 @@ router.put('/:id', upload.single('file'), (req, res) => {
 
 //eliminar una sala
 router.delete('/:id', (req, res) => {
-    const id = req.params.id;
-    //verificar si existe la sala
-    con.query('SELECT * FROM salas WHERE id = ?', id, (error, rows, fields) => {
-        if (!error && rows.length > 0) {
-            con.query('DELETE FROM salas WHERE id = ?', id, (error, results) => {
-                if (!error) {
-                    res.send({ success: true, message: 'Sala eliminada exitosamente.' });
-                } else {
-                    console.log('Error al eliminar');
-                }
-            });
+    const idSala = req.params.id;
+
+    //obtener reservaciones en esa sal
+    con.query('SELECT * FROM reservacion WHERE id_sala = ?', idSala, (error, reservaciones, fields) => {
+        if (!error) {
+            //eliminar las reservaciones
+            if (reservaciones.length > 0) {
+                const idsReservaciones = reservaciones.map(reservacion => reservacion.id);
+                con.query('DELETE FROM reservacion WHERE id IN (?)', [idsReservaciones], (errorReservaciones, resultsReservaciones) => {
+                    if (!errorReservaciones) {
+                        //eliminar la sala
+                        con.query('DELETE FROM salas WHERE id = ?', idSala, (errorSala, resultsSala) => {
+                            if (!errorSala) {
+                                res.send({ success: true, message: 'Sala y reservaciones eliminadas.' });
+                            } else {
+                                console.log('Error al eliminar sala: ' + errorSala);
+                                res.send({ success: false, message: 'Error al eliminar sala.' });
+                            }
+                        });
+                    } else {
+                        console.log('Error al eliminar las reservaciones');
+                        res.send({ success: false, message: 'Error al eliminar las reservaciones.' });
+                    }
+                });
+            } else {
+                //en caso de no haber reservaciones borramos la sala
+                con.query('DELETE FROM salas WHERE id = ?', idSala, (errorSala, resultsSala) => {
+                    if (!errorSala) {
+                        res.send({ success: true, message: 'Sala eliminada.' });
+                    } else {
+                        console.log('Error al eliminar sala: ' + errorSala);
+                        res.send({ success: false, message: 'Error al eliminar sala.' });
+                    }
+                });
+            }
         } else {
-            console.log('Error al eliminar, sala no existe.');
-            res.send({ success: false, message: 'Error al eliminar, sala no existe.' })
+            console.log('Error al obtener los datos');
+            res.send({ success: false, message: 'Error al obtener los datos.' });
         }
     });
 });
+
 
 module.exports = router;

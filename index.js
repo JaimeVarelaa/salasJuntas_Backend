@@ -18,6 +18,11 @@ app.use('/salas', salaRoutes);
 app.use('/usuarios', usuarioRoutes);
 app.use('/reservacion', reservacionRoutes);
 
+//ver las imagenes
+app.use('/isalas', express.static('isalas'));
+app.use('/iusuarios', express.static('iusuarios'));
+
+
 app.listen(3000, () => {
     console.log('Escuchando en el puerto 3000');
 });

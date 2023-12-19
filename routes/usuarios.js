@@ -7,10 +7,10 @@ const con = require('../database');
 const router = express.Router();
 
 //guardar las imágenes con multer
-router.use('/usuarios', express.static(path.join(__dirname, 'usuarios')));
+router.use('/iusuarios', express.static(path.join(__dirname, 'iusuarios')));
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'usuarios');
+        cb(null, 'iusuarios');
     },
     filename: (req, file, cb) => {
         cb(null, file.originalname);
@@ -33,8 +33,9 @@ router.post('', upload.single('file'), async (req, res, next) => {
         ApellidoP: apellidoP,
         ApellidoM: apellidoM,
         Puesto: puesto,
-        Foto: file ? file.path : "usuarios/default.png",
+        Foto: file ? file.path : "iusuarios/default.png",
     };
+    //console.log(usuario);
     con.query('INSERT INTO usuarios SET ?', [usuario], (error, results) => {
         if (!error) {
             res.send({ success: true, message: 'Usuario creado exitosamente.' });
@@ -81,7 +82,7 @@ router.put('/:id', upload.single('file'), (req, res) => {
         ApellidoP: apellidoP,
         ApellidoM: apellidoM,
         Puesto: puesto,
-        Foto: file ? file.path : "usuarios/default.png",
+        Foto: file ? file.path : "iusuarios/default.png",
     };
     //verificar si existe el usuario
     con.query('SELECT * FROM usuarios WHERE id = ?', id, (error, rows, fields) => {
@@ -102,23 +103,47 @@ router.put('/:id', upload.single('file'), (req, res) => {
 
 //eliminar un usuario
 router.delete('/:id', (req, res) => {
-    const id = req.params.id;
+    const idUsuario = req.params.id;
 
-    //verificar si existe el usuario
-    con.query('SELECT * FROM usuarios WHERE id = ?', id, (error, rows, fields) => {
-        if (!error && rows.length > 0) {
-            con.query('DELETE FROM usuarios WHERE id = ?', id, (error, results) => {
-                if (!error) {
-                    res.send({ success: true, message: 'Usuario eliminada exitosamente.' });
-                } else {
-                    console.log('Error al eliminar');
-                }
-            });
+    ///reservaciones del usuario
+    con.query('SELECT * FROM reservacion WHERE id_usuario = ?', idUsuario, (errorReservaciones, reservaciones, fieldsReservaciones) => {
+        if (!errorReservaciones) {
+            //eliminar las reservaciones
+            if (reservaciones.length > 0) {
+                const idsReservaciones = reservaciones.map(reservacion => reservacion.id);
+                con.query('DELETE FROM reservacion WHERE id IN (?)', [idsReservaciones], (errorEliminarReservaciones, resultsEliminarReservaciones) => {
+                    if (!errorEliminarReservaciones) {
+                        //eliminar el usuario
+                        con.query('DELETE FROM usuarios WHERE id = ?', idUsuario, (errorEliminarUsuario, resultsEliminarUsuario) => {
+                            if (!errorEliminarUsuario) {
+                                res.send({ success: true, message: 'Usuario y reservaciones eliminadas.' });
+                            } else {
+                                console.log('Error al eliminar usuario: ' + errorEliminarUsuario);
+                                res.send({ success: false, message: 'Error al eliminar usuario.' });
+                            }
+                        });
+                    } else {
+                        console.log('Error al eliminar reservaciones .');
+                        res.send({ success: false, message: 'Error al eliminar reservaciones.' });
+                    }
+                });
+            } else {
+                //eliminar al usuario sin reservaciones
+                con.query('DELETE FROM usuarios WHERE id = ?', idUsuario, (errorEliminarUsuario, resultsEliminarUsuario) => {
+                    if (!errorEliminarUsuario) {
+                        res.send({ success: true, message: 'Usuario eliminado.' });
+                    } else {
+                        console.log('Error al eliminar usuario: ' + errorEliminarUsuario);
+                        res.send({ success: false, message: 'Error al eliminar usuario.' });
+                    }
+                });
+            }
         } else {
-            console.log('Error al eliminar, usuario no existe.');
-            res.send({ success: false, message: 'Error al eliminar, usuario no existe.' })
+            console.log('Error al obtener reservaciones.');
+            res.send({ success: false, message: 'Error al obtener reservaciones.' });
         }
     });
 });
+
 
 module.exports = router;
